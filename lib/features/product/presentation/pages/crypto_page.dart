@@ -114,7 +114,7 @@ class _CryptoPageState extends State<CryptoPage> {
               },
               icon: const Icon(Icons.calculate, color: Colors.white),
               label: const Text(
-                'Kalkulasi Pajak (Isolate NIM 05)', 
+                'Kalkulasi Pajak', 
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
               ),
             ),
