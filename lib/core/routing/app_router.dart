@@ -18,7 +18,7 @@ class AppRouter {
         path: '/',
         builder: (context, state) {
           return BlocProvider(
-            create: (context) => locator<ProductCubit>()..fetchProducts(), 
+            create: (context) => locator<ProductCubit>()..fetchAllProducts(), 
             child: const ProductPage(),
           );
         },

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
 import '../cubit/product_cubit.dart';
 import '../cubit/product_state.dart';
 
@@ -11,25 +10,27 @@ class ProductPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100], // Background lembut sesuai style Todo
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('Katalog UTDI', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'UTD Store Taupik',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.blueAccent, // Warna biru sesuai style Todo
+        backgroundColor: Colors.blueAccent,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<ProductCubit>().fetchProducts(),
+            onPressed: () => context.read<ProductCubit>().fetchAllProducts(),
           ),
           IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () => context.push('/profile'),
+            icon: const Icon(Icons.bookmark),
+            onPressed: () => context.push('/todo'),
           ),
         ],
       ),
-
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -41,12 +42,23 @@ class ProductPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Text(
-                    'Menu Praktikum',
-                    style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                    'UTD Store & Crypto',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  Text('Muhamad Taupik Anjana', style: TextStyle(color: Colors.white70)),
+                  SizedBox(height: 5),
+                  Text('Muhamad Taupik Anjana', style: TextStyle(color: Colors.white)),
+                  Text('NIM: 20123005', style: TextStyle(color: Colors.white70)),
                 ],
               ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home, color: Colors.blueAccent),
+              title: const Text('Katalog Produk'),
+              onTap: () => Navigator.pop(context),
             ),
             ListTile(
               leading: const Icon(Icons.currency_bitcoin, color: Colors.orange),
@@ -66,8 +78,8 @@ class ProductPage extends StatelessWidget {
             ),
             const Divider(),
             ListTile(
-              leading: const Icon(Icons.storage, color: Colors.blueAccent),
-              title: const Text('Todo Isar'),
+              leading: const Icon(Icons.storage, color: Colors.purple),
+              title: const Text('Bookmark (Isar)'),
               onTap: () {
                 Navigator.pop(context);
                 context.push('/todo');
@@ -76,17 +88,15 @@ class ProductPage extends StatelessWidget {
           ],
         ),
       ),
-
+      // Perhatikan kurung penutup di sini agar tidak menyebabkan error "unused_label"
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/crypto'),
         icon: const Icon(Icons.show_chart, color: Colors.white),
-        label: const Text('Live Crypto', style: TextStyle(color: Colors.white)),
+        label: const Text('Cek Bitcoin', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.orangeAccent,
       ),
-
       body: Column(
         children: [
-          // Header dekorasi melengkung sesuai style TodoPage
           Container(
             width: double.infinity,
             padding: const EdgeInsets.only(bottom: 30),
@@ -99,50 +109,55 @@ class ProductPage extends StatelessWidget {
             ),
             child: const Center(
               child: Text(
-                'Daftar Produk Terbaru',
+                'Daftar Produk [Diskon 10%]',
                 style: TextStyle(color: Colors.white, fontSize: 16),
               ),
             ),
           ),
-          
           Expanded(
             child: BlocBuilder<ProductCubit, ProductState>(
               builder: (context, state) {
                 if (state is ProductLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 20),
+                        Text('Menunggu 5 Detik... (Digit NIM: 5)'),
+                      ],
+                    ),
+                  );
                 }
-
                 if (state is ProductError) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(state.message, style: const TextStyle(color: Colors.red)),
+                        const Icon(Icons.error_outline, size: 60, color: Colors.red),
                         const SizedBox(height: 10),
+                        Text(state.message, style: const TextStyle(color: Colors.red)),
                         ElevatedButton(
-                          onPressed: () => context.read<ProductCubit>().fetchProducts(),
+                          onPressed: () => context.read<ProductCubit>().fetchAllProducts(),
                           child: const Text('Coba Lagi'),
                         ),
                       ],
                     ),
                   );
                 }
-
                 if (state is ProductLoaded) {
                   final products = state.products;
-                  if (products.isEmpty) {
-                    return const Center(child: Text('Tidak ada produk tersedia.'));
-                  }
-
                   return ListView.builder(
-                    padding: const EdgeInsets.only(top: 20, left: 10, right: 10, bottom: 80),
+                    padding: const EdgeInsets.all(15),
                     itemCount: products.length,
                     itemBuilder: (context, index) {
                       final item = products[index];
                       return Card(
-                        elevation: 2,
+                        elevation: 3,
                         margin: const EdgeInsets.only(bottom: 15),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
                         child: ListTile(
                           contentPadding: const EdgeInsets.all(10),
                           leading: ClipRRect(
@@ -152,18 +167,18 @@ class ProductPage extends StatelessWidget {
                               width: 60,
                               height: 60,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => 
-                                  const Icon(Icons.broken_image, size: 60, color: Colors.grey),
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.image_not_supported, size: 60),
                             ),
                           ),
                           title: Text(
                             item.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                            maxLines: 1,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          subtitle: Text('ID: ${item.id}', style: TextStyle(color: Colors.grey[600])),
-                          trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.blueAccent),
+                          subtitle: Text('ID: ${item.id}'),
+                          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                           onTap: () => context.push('/detail/${item.id}'),
                         ),
                       );

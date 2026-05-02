@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'dart:convert'; // Untuk fungsi jsonDecode [cite: 545]
-import 'package:flutter/foundation.dart'; // Untuk fungsi compute() [cite: 695]
+import 'dart:convert';
+import 'package:flutter/foundation.dart'; // Wajib untuk fungsi compute()
 
 // 1. FUNGSI BERAT DI LUAR CLASS (Isolate)
-// Wajib berada di luar class agar bisa dijalankan oleh Isolate [cite: 683, 685]
+// Wajib berada di luar class agar bisa dijalankan oleh Isolate (Pekerja Gudang)
 int tugasMenghitungBerat(int jumlahLooping) {
   int hasil = 0;
   for (int i = 0; i < jumlahLooping; i++) {
@@ -21,14 +21,14 @@ class CryptoPage extends StatefulWidget {
 }
 
 class _CryptoPageState extends State<CryptoPage> {
-  // Menggunakan URL WebSocket yang kamu berikan
+  // Menggunakan URL WebSocket Binance Vision[cite: 5]
   late WebSocketChannel _channel;
   String _currentPrice = '0.00';
 
   @override
   void initState() {
     super.initState();
-    // Menghubungkan ke server WebSocket saat halaman dibuka [cite: 557]
+    // Menghubungkan telepon ke Server (WebSocket)[cite: 5]
     _channel = WebSocketChannel.connect(
       Uri.parse('wss://data-stream.binance.vision/ws/btcusdt@trade'),
     );
@@ -36,7 +36,7 @@ class _CryptoPageState extends State<CryptoPage> {
 
   @override
   void dispose() {
-    // WAJIB! Tutup koneksi saat halaman ditinggalkan agar tidak bocor memori [cite: 567, 568]
+    // WAJIB! Tutup koneksi agar tidak bocor memori[cite: 5]
     _channel.sink.close();
     super.dispose();
   }
@@ -44,76 +44,85 @@ class _CryptoPageState extends State<CryptoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('Live BTC - Binance Vision'),
-        backgroundColor: Colors.orange.shade800, 
+        title: const Text('UTD Crypto Hub', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.orange.shade800,
         centerTitle: true,
+        foregroundColor: Colors.white,
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.currency_bitcoin, size: 100, color: Colors.orange), 
-            const SizedBox(height: 20),
+            const Icon(Icons.currency_bitcoin, size: 100, color: Colors.orange),
+            const SizedBox(height: 10),
+            const Text('BTC / USDT (Real-time)', style: TextStyle(fontSize: 16)),
             
-            // StreamBuilder otomatis rebuild UI tiap ada data baru masuk [cite: 577, 578]
+            // StreamBuilder otomatis rebuild UI tiap ada data baru masuk[cite: 5]
             StreamBuilder(
               stream: _channel.stream,
               builder: (context, snapshot) {
-                if (snapshot.hasError) return const Text('Koneksi Error!');
-                if (!snapshot.hasData) return const CircularProgressIndicator(); 
+                if (snapshot.hasError) return const Text('Koneksi Terputus!', style: TextStyle(color: Colors.red));
+                if (!snapshot.hasData) return const CircularProgressIndicator();
 
-                // Cara Parsing Data dari Binance Vision:
-                // Data datang sebagai String JSON, kita decode jadi Map [cite: 591, 592]
+                // Parsing JSON dari Binance (key 'p' adalah price)[cite: 5]
                 final Map<String, dynamic> dataJson = jsonDecode(snapshot.data.toString());
-                
-                // Pada stream Binance, harga berada di key 'p' (price)
                 final String price = dataJson['p'] ?? '0.00';
                 _currentPrice = double.parse(price).toStringAsFixed(2);
 
                 return Text(
                   '\$ $_currentPrice',
                   style: const TextStyle(
-                    fontSize: 40, 
-                    fontWeight: FontWeight.bold, 
-                    color: Colors.green
-                  ), 
+                    fontSize: 45,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
                 );
               },
             ),
 
             const SizedBox(height: 40),
-            // Indikator ini akan berhenti jika layar macet (Siksa Main Thread) [cite: 654, 678]
-            const CircularProgressIndicator(),
+            // Indikator ini TIDAK BOLEH FREEZE saat kalkulasi berjalan
+            const CircularProgressIndicator(color: Colors.blueAccent),
             const SizedBox(height: 20),
 
-            // TOMBOL MERAH (SIMULASI UI MACET) [cite: 656, 657, 658]
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () {
-                debugPrint("Main Thread disiksa... Layar akan macet!"); 
-                int hasil = 0;
-                // Looping berat di Main Thread (UI Thread) 
-                for (int i = 0; i < 4000000000; i++) {
-                  hasil += i;
-                }
-                debugPrint("Selesai! Hasil: $hasil"); 
-              },
-              child: const Text('Siksa Main Thread (Layar Macet)', style: TextStyle(color: Colors.white)), 
-            ),
-
-            const SizedBox(height: 10),
-
-            // TOMBOL HIJAU (SOLUSI ISOLATE) [cite: 680, 699, 700]
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            // TOMBOL HIJAU (SOLUSI ISOLATE)
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
               onPressed: () async {
-                debugPrint("Menghitung di Isolate... Layar tetap lancar!"); 
-               
-                int hasil = await compute(tugasMenghitungBerat, 4000000000);
-                debugPrint("Selesai dari Isolate! Hasil: $hasil"); 
+                debugPrint("Memulai Isolate untuk NIM 20123005...");
+                
+                // LOGIKA PERSONAL ANTI-AI (NIM 05):
+                // [2 Digit Terakhir NIM] x 10.000.000
+                // 05 * 10.000.000 = 50.000.000
+                const int nimLoopFactor = 05 * 10000000;
+
+                // Memanggil Isolate agar UI tetap lancar[cite: 5]
+                final result = await compute(tugasMenghitungBerat, nimLoopFactor);
+
+                debugPrint("Selesai! Hasil: $result");
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Kalkulasi NIM 05 Selesai: $result')),
+                  );
+                }
               },
-              child: const Text('Gunakan Isolate (Layar Lancar)', style: TextStyle(color: Colors.white)), 
+              icon: const Icon(Icons.calculate, color: Colors.white),
+              label: const Text(
+                'Kalkulasi Pajak (Isolate NIM 05)', 
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            Text(
+              'Taupik Anjana - 20123005',
+              style: TextStyle(color: Colors.grey[600], fontSize: 12),
             ),
           ],
         ),
