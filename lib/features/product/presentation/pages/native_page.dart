@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:math' as math;
 
 class NativePage extends StatefulWidget {
   const NativePage({super.key});
@@ -91,7 +90,7 @@ class _NativePageState extends State<NativePage> with SingleTickerProviderStateM
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.blueAccent.withOpacity(0.1),
+        color: Colors.blueAccent.withValues(alpha: 0.1),
         borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(40), bottomRight: Radius.circular(40)),
       ),
       child: Row(
@@ -126,8 +125,8 @@ class _NativePageState extends State<NativePage> with SingleTickerProviderStateM
               height: 220,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: batteryColor.withOpacity(0.2), width: 10),
-                boxShadow: [BoxShadow(color: batteryColor.withOpacity(0.1), blurRadius: 30, spreadRadius: 10)],
+                border: Border.all(color: batteryColor.withValues(alpha: 0.2), width: 10),
+                boxShadow: [BoxShadow(color: batteryColor.withValues(alpha: 0.1), blurRadius: 30, spreadRadius: 10)],
               ),
             ),
             // Progress Ring
@@ -163,7 +162,7 @@ class _NativePageState extends State<NativePage> with SingleTickerProviderStateM
       margin: const EdgeInsets.symmetric(horizontal: 30),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(25),
         border: Border.all(color: Colors.white10),
       ),
@@ -230,7 +229,7 @@ class _NativePageState extends State<NativePage> with SingleTickerProviderStateM
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                 elevation: 10,
-                shadowColor: color.withOpacity(0.5),
+                shadowColor: color.withValues(alpha: 0.5),
               ),
             ),
     );

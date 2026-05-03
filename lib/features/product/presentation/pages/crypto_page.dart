@@ -83,7 +83,7 @@ class _CryptoPageState extends State<CryptoPage> {
                 const SizedBox(height: 5),
                 Text(
                   'Taupik Anjana - 20123005',
-                  style: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.bold),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -129,7 +129,7 @@ class _CryptoPageState extends State<CryptoPage> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 15,
             offset: const Offset(0, 5),
           )
