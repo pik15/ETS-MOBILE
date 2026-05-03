@@ -7,10 +7,13 @@ class Todo {
   Id id = Isar.autoIncrement;
 
   late String title;
-  late String imageUrl; // Tambahkan ini untuk foto produk
   
-  // LOGIKA PERSONAL NIM 20123005: Wajib simpan waktu
-  late DateTime createdAt; 
+  // UBAH MENJADI NULLABLE (?) agar tidak error saat membaca data lama
+  String? imageUrl; 
+  
+  // LOGIKA PERSONAL NIM 20123005: Simpan waktu
+  // UBAH MENJADI NULLABLE (?) untuk menghindari LateInitializationError
+  DateTime? createdAt; 
 
   bool isCompleted = false;
 }

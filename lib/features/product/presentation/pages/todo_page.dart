@@ -24,7 +24,7 @@ class _TodoPageState extends State<TodoPage> {
     final dir = await getApplicationDocumentsDirectory();
     // Membuka instance Isar secara aman
     isar = Isar.getInstance() ?? await Isar.open([TodoSchema], directory: dir.path);
-    setState(() {}); // Re-build untuk memastikan instance isar tersedia bagi StreamBuilder
+    if (mounted) setState(() {}); 
   }
 
   Future<void> _addTodo() async {
@@ -40,7 +40,6 @@ class _TodoPageState extends State<TodoPage> {
     });
     
     _controller.clear();
-    // Tidak perlu load manual, StreamBuilder akan mendeteksi perubahan secara otomatis
   }
 
   Future<void> _deleteTodo(int id) async {
@@ -63,7 +62,7 @@ class _TodoPageState extends State<TodoPage> {
       ),
       body: Column(
         children: [
-          // Header Input
+          // Header Input dengan Style Melengkung
           Container(
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
@@ -107,7 +106,6 @@ class _TodoPageState extends State<TodoPage> {
             child: isar == null
                 ? const Center(child: CircularProgressIndicator())
                 : StreamBuilder<List<Todo>>(
-                    // Menonton perubahan database secara real-time
                     stream: isar!.todos.where().watch(fireImmediately: true),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) return const Center(child: Text("Error memuat data"));
@@ -146,9 +144,11 @@ class _TodoPageState extends State<TodoPage> {
                                 item.title,
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                               ),
-                              // Menampilkan Waktu Simpan (Syarat Logika Personal)
+                              // PERBAIKAN: Penanganan Null Safety untuk menghindari error LateInitialization
                               subtitle: Text(
-                                "Dibuat: ${item.createdAt.hour}:${item.createdAt.minute.toString().padLeft(2, '0')}",
+                                item.createdAt != null 
+                                  ? "Dibuat: ${item.createdAt!.hour.toString().padLeft(2, '0')}:${item.createdAt!.minute.toString().padLeft(2, '0')}"
+                                  : "Waktu tidak tersedia",
                                 style: TextStyle(color: Colors.grey[600], fontSize: 12),
                               ),
                               trailing: IconButton(
