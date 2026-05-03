@@ -12,7 +12,6 @@ class TodoPage extends StatefulWidget {
 
 class _TodoPageState extends State<TodoPage> {
   Isar? isar;
-  List<Todo> todos = [];
   final TextEditingController _controller = TextEditingController();
 
   @override
@@ -23,45 +22,40 @@ class _TodoPageState extends State<TodoPage> {
 
   Future<void> _initIsar() async {
     final dir = await getApplicationDocumentsDirectory();
-    // Gunakan pengecekan jika Isar sudah terbuka agar tidak error saat hot reload
+    // Membuka instance Isar secara aman
     isar = Isar.getInstance() ?? await Isar.open([TodoSchema], directory: dir.path);
-    _loadTodos();
-  }
-
-  Future<void> _loadTodos() async {
-    if (isar != null) {
-      final allTodos = await isar!.todos.where().findAll();
-      setState(() {
-        todos = allTodos;
-      });
-    }
+    setState(() {}); // Re-build untuk memastikan instance isar tersedia bagi StreamBuilder
   }
 
   Future<void> _addTodo() async {
-    if (_controller.text.isEmpty) return;
+    if (_controller.text.isEmpty || isar == null) return;
 
-    final newTodo = Todo()..title = _controller.text;
+    // Menambahkan data dengan Logika Timestamp (NIM 20123005)
+    final newTodo = Todo()
+      ..title = _controller.text
+      ..createdAt = DateTime.now();
+
     await isar!.writeTxn(() async {
       await isar!.todos.put(newTodo);
     });
     
     _controller.clear();
-    _loadTodos();
+    // Tidak perlu load manual, StreamBuilder akan mendeteksi perubahan secara otomatis
   }
 
   Future<void> _deleteTodo(int id) async {
+    if (isar == null) return;
     await isar!.writeTxn(() async {
       await isar!.todos.delete(id);
     });
-    _loadTodos();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100], // Background yang lebih lembut
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('My Tasks', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('My Tasks (NIM 05)', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.blueAccent,
@@ -69,7 +63,7 @@ class _TodoPageState extends State<TodoPage> {
       ),
       body: Column(
         children: [
-          // Bagian Input Header
+          // Header Input
           Container(
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
@@ -108,46 +102,65 @@ class _TodoPageState extends State<TodoPage> {
             ),
           ),
           
-          // Bagian Daftar Todo
+          // Daftar Todo Reaktif
           Expanded(
-            child: todos.isEmpty 
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.assignment_turned_in_outlined, size: 80, color: Colors.grey[400]),
-                      const SizedBox(height: 10),
-                      Text('Belum ada tugas hari ini', style: TextStyle(color: Colors.grey[500])),
-                    ],
+            child: isar == null
+                ? const Center(child: CircularProgressIndicator())
+                : StreamBuilder<List<Todo>>(
+                    // Menonton perubahan database secara real-time
+                    stream: isar!.todos.where().watch(fireImmediately: true),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) return const Center(child: Text("Error memuat data"));
+                      
+                      final todos = snapshot.data ?? [];
+
+                      if (todos.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.assignment_turned_in_outlined, size: 80, color: Colors.grey[400]),
+                              const SizedBox(height: 10),
+                              Text('Belum ada tugas hari ini', style: TextStyle(color: Colors.grey[500])),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.all(15),
+                        itemCount: todos.length,
+                        itemBuilder: (context, index) {
+                          final item = todos[index];
+                          return Card(
+                            elevation: 2,
+                            margin: const EdgeInsets.only(bottom: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                              leading: const CircleAvatar(
+                                backgroundColor: Colors.blueAccent,
+                                radius: 12,
+                              ),
+                              title: Text(
+                                item.title,
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                              // Menampilkan Waktu Simpan (Syarat Logika Personal)
+                              subtitle: Text(
+                                "Dibuat: ${item.createdAt.hour}:${item.createdAt.minute.toString().padLeft(2, '0')}",
+                                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                              ),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                                onPressed: () => _deleteTodo(item.id),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-                  itemCount: todos.length,
-                  itemBuilder: (context, index) {
-                    final item = todos[index];
-                    return Card(
-                      elevation: 2,
-                      margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                        leading: const CircleAvatar(
-                          backgroundColor: Colors.blueAccent,
-                          radius: 12,
-                        ),
-                        title: Text(
-                          item.title,
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                          onPressed: () => _deleteTodo(item.id),
-                        ),
-                      ),
-                    );
-                  },
-                ),
           ),
         ],
       ),
