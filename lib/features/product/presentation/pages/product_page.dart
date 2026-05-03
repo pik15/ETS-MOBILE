@@ -10,185 +10,258 @@ class ProductPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color(0xFFF8F9FA), // Grey yang lebih modern
       appBar: AppBar(
         title: const Text(
           'UTD Store Taupik',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1.2),
         ),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.blueAccent,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Colors.blueAccent, Color(0xFF1A73E8)],
+            ),
+          ),
+        ),
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded),
             onPressed: () => context.read<ProductCubit>().fetchAllProducts(),
           ),
           IconButton(
-            icon: const Icon(Icons.bookmark),
+            icon: const Icon(Icons.bookmark_border_rounded),
             onPressed: () => context.push('/todo'),
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blueAccent),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    'UTD Store & Crypto',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 5),
-                  Text('Muhamad Taupik Anjana', style: TextStyle(color: Colors.white)),
-                  Text('NIM: 20123005', style: TextStyle(color: Colors.white70)),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home, color: Colors.blueAccent),
-              title: const Text('Katalog Produk'),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.currency_bitcoin, color: Colors.orange),
-              title: const Text('Live Crypto'),
-              onTap: () {
-                Navigator.pop(context);
-                context.push('/crypto');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.android, color: Colors.green),
-              title: const Text('Fitur Native'),
-              onTap: () {
-                Navigator.pop(context);
-                context.push('/native');
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.storage, color: Colors.purple),
-              title: const Text('Bookmark (Isar)'),
-              onTap: () {
-                Navigator.pop(context);
-                context.push('/todo');
-              },
-            ),
-          ],
-        ),
-      ),
-      // Perhatikan kurung penutup di sini agar tidak menyebabkan error "unused_label"
+      drawer: _buildDrawer(context),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/crypto'),
-        icon: const Icon(Icons.show_chart, color: Colors.white),
-        label: const Text('Cek Bitcoin', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.orangeAccent,
+        icon: const Icon(Icons.auto_graph_rounded, color: Colors.white),
+        label: const Text('Market Crypto', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.orange[700],
+        elevation: 4,
       ),
       body: Column(
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.only(bottom: 30),
-            decoration: const BoxDecoration(
-              color: Colors.blueAccent,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-            ),
-            child: const Center(
-              child: Text(
-                'Daftar Produk [Diskon 10%]',
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-            ),
-          ),
+          // Banner Info Diskon
+          _buildDiscountBanner(),
+          
           Expanded(
             child: BlocBuilder<ProductCubit, ProductState>(
               builder: (context, state) {
                 if (state is ProductLoading) {
-                  return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 20),
-                        Text('Menunggu 5 Detik... (Digit NIM: 5)'),
-                      ],
-                    ),
-                  );
+                  return _buildLoadingState();
                 }
                 if (state is ProductError) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, size: 60, color: Colors.red),
-                        const SizedBox(height: 10),
-                        Text(state.message, style: const TextStyle(color: Colors.red)),
-                        ElevatedButton(
-                          onPressed: () => context.read<ProductCubit>().fetchAllProducts(),
-                          child: const Text('Coba Lagi'),
-                        ),
-                      ],
-                    ),
-                  );
+                  return _buildErrorState(context, state.message);
                 }
                 if (state is ProductLoaded) {
-                  final products = state.products;
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(15),
-                    itemCount: products.length,
-                    itemBuilder: (context, index) {
-                      final item = products[index];
-                      return Card(
-                        elevation: 3,
-                        margin: const EdgeInsets.only(bottom: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(10),
-                          leading: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.network(
-                              item.image,
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.image_not_supported, size: 60),
-                            ),
-                          ),
-                          title: Text(
-                            item.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Text('ID: ${item.id}'),
-                          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                          onTap: () => context.push('/detail/${item.id}'),
-                        ),
-                      );
-                    },
-                  );
+                  return _buildProductList(state.products);
                 }
                 return const SizedBox.shrink();
               },
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  // --- Sub Widgets untuk Style yang lebih bersih ---
+
+  Widget _buildDiscountBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.blueAccent, Color(0xFF1A73E8)],
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
+        boxShadow: [
+          BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.local_offer_rounded, color: Colors.white, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            'DAFTAR PRODUK [DISKON 10%]',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(strokeWidth: 3, color: Colors.blueAccent),
+          const SizedBox(height: 25),
+          Text(
+            'Menunggu 5 Detik... (Digit NIM: 5)',
+            style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductList(List products) {
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(15, 20, 15, 80), // Padding bawah extra untuk FAB
+      itemCount: products.length,
+      itemBuilder: (context, index) {
+        final item = products[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 15),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(12),
+              leading: Hero(
+                tag: 'prod_${item.id}',
+                child: Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    color: Colors.grey[100],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(15),
+                    child: Image.network(
+                      item.image,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.grey),
+                    ),
+                  ),
+                ),
+              ),
+              title: Text(
+                item.name,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 5),
+                child: Text(
+                  'ID: ${item.id} • Tersedia',
+                  style: TextStyle(color: Colors.blueAccent[700], fontSize: 12),
+                ),
+              ),
+              trailing: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.chevron_right_rounded, color: Colors.blueAccent),
+              ),
+              onTap: () => context.push('/detail/${item.id}'),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(topRight: Radius.circular(30), bottomRight: Radius.circular(30)),
+      ),
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          // DrawerHeader tetap menggunakan style Anda dengan sedikit perbaikan layout
+          const DrawerHeader(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [Colors.blueAccent, Color(0xFF1A73E8)]),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircleAvatar(backgroundColor: Colors.white, radius: 25, child: Icon(Icons.person, color: Colors.blueAccent)),
+                SizedBox(height: 12),
+                Text('UTD Store & Crypto', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                Text('Muhamad Taupik Anjana', style: TextStyle(color: Colors.white, fontSize: 13)),
+              ],
+            ),
+          ),
+          _drawerItem(Icons.home_rounded, 'Katalog Produk', Colors.blueAccent, () => Navigator.pop(context)),
+          _drawerItem(Icons.currency_bitcoin_rounded, 'Live Crypto', Colors.orange, () {
+            Navigator.pop(context);
+            context.push('/crypto');
+          }),
+          _drawerItem(Icons.sensors_rounded, 'Fitur Native', Colors.green, () {
+            Navigator.pop(context);
+            context.push('/native');
+          }),
+          const Divider(indent: 20, endIndent: 20),
+          _drawerItem(Icons.bookmarks_rounded, 'Bookmark (Isar)', Colors.purple, () {
+            Navigator.pop(context);
+            context.push('/todo');
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _drawerItem(IconData icon, String title, Color color, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: color),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+      onTap: onTap,
+    );
+  }
+  
+  Widget _buildErrorState(BuildContext context, String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.cloud_off_rounded, size: 70, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent)),
+          const SizedBox(height: 16),
+          TextButton.icon(
+            onPressed: () => context.read<ProductCubit>().fetchAllProducts(),
+            icon: const Icon(Icons.refresh),
+            label: const Text('Coba Lagi'),
+          )
         ],
       ),
     );
