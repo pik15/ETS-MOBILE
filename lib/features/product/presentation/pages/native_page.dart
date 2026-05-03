@@ -1,107 +1,238 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:math' as math;
 
 class NativePage extends StatefulWidget {
   const NativePage({super.key});
+
   @override
   State<NativePage> createState() => _NativePageState();
 }
 
-class _NativePageState extends State<NativePage> {
+class _NativePageState extends State<NativePage> with SingleTickerProviderStateMixin {
   static const platform = MethodChannel('utd.ac.id/native_jembatan');
-  String _batteryLevelText = "Belum dicek";
-  int _batteryLevelInt = -1; // Menyimpan angka murni untuk logika UI
+  String _statusMessage = "Siap Melakukan Pengecekan";
+  int _batteryLevel = -1;
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(); // Animasi berputar terus-menerus
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   Future<void> _getBatteryLevel() async {
     try {
       final int result = await platform.invokeMethod('getBatteryLevel');
       setState(() {
-        _batteryLevelInt = result;
-        _batteryLevelText = 'Level Baterai: $result%';
+        _batteryLevel = result;
+        _statusMessage = result > 20 ? "Kondisi Baterai Sehat" : "Baterai Lemah! Segera Charge";
       });
     } on PlatformException catch (e) {
       setState(() {
-        _batteryLevelInt = -1;
-        _batteryLevelText = "Gagal mengambil baterai: '${e.message}'.";
+        _batteryLevel = -1;
+        _statusMessage = "Error: ${e.message}";
       });
     }
-  }
-
-  Future<void> _showToast() async {
-    await platform.invokeMethod('showToast', {"message": "Halo dari Flutter Native!"});
-  }
-
-  // Fungsi pembantu untuk memilih Ikon berdasarkan persentase
-  IconData _getBatteryIcon() {
-    if (_batteryLevelInt == -1) return Icons.battery_unknown;
-    if (_batteryLevelInt >= 90) return Icons.battery_full;
-    if (_batteryLevelInt >= 70) return Icons.battery_6_bar;
-    if (_batteryLevelInt >= 50) return Icons.battery_4_bar;
-    if (_batteryLevelInt >= 30) return Icons.battery_2_bar;
-    return Icons.battery_alert;
-  }
-
-  // Fungsi pembantu untuk memilih Warna berdasarkan persentase
-  Color _getBatteryColor() {
-    if (_batteryLevelInt == -1) return Colors.grey;
-    if (_batteryLevelInt >= 30) return Colors.green;
-    if (_batteryLevelInt >= 15) return Colors.orange;
-    return Colors.red;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Modul 7: Native Features')),
-      body: Center(
+      backgroundColor: const Color(0xFF0F172A), // Deep Dark Navy
+      appBar: AppBar(
+        title: const Text('NATIVE DASHBOARD', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2)),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // --- VISUALISASI BATERAI ---
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                Icon(
-                  _getBatteryIcon(),
-                  size: 150,
-                  color: _getBatteryColor(),
+            _buildProfileHeader(),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 40),
+                    _buildModernBatteryIndicator(),
+                    const SizedBox(height: 40),
+                    _buildInfoCard(),
+                    const SizedBox(height: 40),
+                    _buildActionButtons(),
+                  ],
                 ),
-                // Menampilkan angka di dalam/dekat baterai jika sudah dicek
-                if (_batteryLevelInt != -1)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: Text(
-                      '$_batteryLevelInt%',
-                      style: const TextStyle(
-                        fontSize: 20, 
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black54
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Text(
-              _batteryLevelText, 
-              style: const TextStyle(fontSize: 18, color: Colors.grey)
-            ),
-            const SizedBox(height: 40),
-            ElevatedButton.icon(
-              onPressed: _getBatteryLevel,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Cek Baterai HP'),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[50]),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton.icon(
-              onPressed: _showToast,
-              icon: const Icon(Icons.message),
-              label: const Text('Tampilkan Toast Android'),
+              ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildProfileHeader() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.blueAccent.withOpacity(0.1),
+        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(40), bottomRight: Radius.circular(40)),
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(backgroundColor: Colors.blueAccent, child: Icon(Icons.person, color: Colors.white)),
+          const SizedBox(width: 15),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Muhamad Taupik Anjana', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              Text('NIM 20123005', style: TextStyle(color: Colors.blueAccent.shade100, fontSize: 12)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernBatteryIndicator() {
+    double progress = _batteryLevel == -1 ? 0.0 : _batteryLevel / 100.0;
+    Color batteryColor = progress > 0.5 ? Colors.cyanAccent : (progress > 0.2 ? Colors.orangeAccent : Colors.redAccent);
+
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            // Outer Glow Ring
+            Container(
+              width: 220,
+              height: 220,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: batteryColor.withOpacity(0.2), width: 10),
+                boxShadow: [BoxShadow(color: batteryColor.withOpacity(0.1), blurRadius: 30, spreadRadius: 10)],
+              ),
+            ),
+            // Progress Ring
+            SizedBox(
+              width: 200,
+              height: 200,
+              child: CircularProgressIndicator(
+                value: progress,
+                strokeWidth: 12,
+                backgroundColor: Colors.white10,
+                color: batteryColor,
+              ),
+            ),
+            // Center Info
+            Column(
+              children: [
+                Icon(_batteryLevel == -1 ? Icons.bolt_outlined : Icons.bolt, color: batteryColor, size: 50),
+                Text(
+                  _batteryLevel == -1 ? "--" : "$_batteryLevel%",
+                  style: TextStyle(fontSize: 40, fontWeight: FontWeight.w900, color: batteryColor),
+                ),
+                const Text('CAPACITY', style: TextStyle(color: Colors.white38, fontSize: 10, letterSpacing: 2)),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildInfoCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 30),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, color: Colors.blueAccent),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Text(
+              _statusMessage,
+              style: const TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 30),
+      child: Column(
+        children: [
+          _customButton(
+            label: "SCAN HARDWARE",
+            icon: Icons.sync,
+            color: Colors.blueAccent,
+            onPressed: _getBatteryLevel,
+          ),
+          const SizedBox(height: 15),
+          _customButton(
+            label: "NATIVE NOTIFICATION",
+            icon: Icons.notifications_active,
+            color: Colors.transparent,
+            isOutlined: true,
+            onPressed: () => platform.invokeMethod('showToast', {"message": "Sistem Native Oke!"}),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _customButton({required String label, required IconData icon, required Color color, required VoidCallback onPressed, bool isOutlined = false}) {
+    return SizedBox(
+      width: double.infinity,
+      height: 55,
+      child: isOutlined
+          ? OutlinedButton.icon(
+              onPressed: onPressed,
+              icon: Icon(icon, size: 18),
+              label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.blueAccent,
+                side: const BorderSide(color: Colors.blueAccent),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+              ),
+            )
+          : ElevatedButton.icon(
+              onPressed: onPressed,
+              icon: Icon(icon, size: 18),
+              label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: color,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                elevation: 10,
+                shadowColor: color.withOpacity(0.5),
+              ),
+            ),
     );
   }
 }
