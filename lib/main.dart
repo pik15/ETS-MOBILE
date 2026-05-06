@@ -3,24 +3,27 @@ import 'core/theme/app_theme.dart';
 import 'core/routing/app_router.dart';
 import 'core/di/injection.dart';
 
-void main() {
-  // SANGAT PENTING: Panggil Pelayan (GetIt) sebelum aplikasi berjalan!
-  // Jika ini lupa dipanggil, aplikasi akan error layar merah.
+void main() async {
+  // 1. WAJIB: Memastikan plugin Flutter terinisialisasi sebelum menjalankan kode async[cite: 2]
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 2. SANGAT PENTING: Panggil Pelayan (GetIt) untuk mendaftarkan IsarService & Cubit[cite: 6]
   setupLocator();
+
   runApp(const MainApp());
 }
 
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
+  
   @override
   Widget build(BuildContext context) {
-    // Ubah dari MaterialApp biasa menjadi MaterialApp.router
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'UTD Advanced App',
-      theme: AppTheme.lightTheme,
-      // Masukkan konfigurasi rute yang sudah kita buat di Step 6
-      routerConfig: AppRouter.router,
+      // Diperbarui menjadi android_studio sesuai nama proyek Anda
+      title: 'android_studio', 
+      theme: AppTheme.lightTheme, // Menggunakan tema Teal UTD
+      routerConfig: AppRouter.router, // Menggunakan navigasi GoRouter[cite: 6]
     );
   }
 }

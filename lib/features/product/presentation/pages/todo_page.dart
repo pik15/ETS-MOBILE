@@ -1,168 +1,154 @@
+// lib/features/todo/presentation/pages/todo_page.dart
 import 'package:flutter/material.dart';
-import 'package:isar/isar.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:android_studio/features/todo/domain/todo_model.dart';
+import '../../../../core/di/injection.dart';
+import '../../../todo/data/isar_service.dart';
+import '../../../todo/domain/todo_model.dart';
 
-class TodoPage extends StatefulWidget {
+class TodoPage extends StatelessWidget {
   const TodoPage({super.key});
 
   @override
-  State<TodoPage> createState() => _TodoPageState();
-}
-
-class _TodoPageState extends State<TodoPage> {
-  Isar? isar;
-  final TextEditingController _controller = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _initIsar();
-  }
-
-  Future<void> _initIsar() async {
-    final dir = await getApplicationDocumentsDirectory();
-    // Membuka instance Isar secara aman
-    isar = Isar.getInstance() ?? await Isar.open([TodoSchema], directory: dir.path);
-    if (mounted) setState(() {}); 
-  }
-
-  Future<void> _addTodo() async {
-    if (_controller.text.isEmpty || isar == null) return;
-
-    // Menambahkan data dengan Logika Timestamp (NIM 20123005)
-    final newTodo = Todo()
-      ..title = _controller.text
-      ..createdAt = DateTime.now();
-
-    await isar!.writeTxn(() async {
-      await isar!.todos.put(newTodo);
-    });
-    
-    _controller.clear();
-  }
-
-  Future<void> _deleteTodo(int id) async {
-    if (isar == null) return;
-    await isar!.writeTxn(() async {
-      await isar!.todos.delete(id);
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final isarService = locator<IsarService>();
+
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text('My Tasks (NIM 05)', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Produk Favorit (NIM 05)',
+          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.1),
+        ),
         centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.blueAccent,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Colors.blueAccent, Color(0xFF1A73E8)],
+            ),
+          ),
+        ),
         foregroundColor: Colors.white,
       ),
-      body: Column(
-        children: [
-          // Header Input dengan Style Melengkung
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
-              color: Colors.blueAccent,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
+      body: StreamBuilder<List<Todo>>(
+        stream: isarService.listenToBookmarks(), // Menggunakan stream reaktif[cite: 2]
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return const Center(child: Text("Error memuat data"));
+          }
+
+          final todos = snapshot.data ?? [];
+
+          if (todos.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.bookmark_border_rounded, size: 80, color: Colors.grey[300]),
+                  const SizedBox(height: 16),
+                  Text('Belum ada produk favorit', style: TextStyle(color: Colors.grey[500])),
+                ],
               ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: TextField(
-                      controller: _controller,
-                      decoration: const InputDecoration(
-                        hintText: 'Apa yang ingin dikerjakan?',
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 20),
-                      ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(15),
+            itemCount: todos.length,
+            itemBuilder: (context, index) {
+              final item = todos[index];
+              return Card(
+                elevation: 0,
+                margin: const EdgeInsets.only(bottom: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(color: Colors.grey.shade200),
+                ),
+                child: ExpansionTile(
+                  // Menambahkan Gambar Produk di Samping Judul
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      color: Colors.grey[100],
+                      child: item.imageUrl != null
+                          ? Image.network(
+                              item.imageUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
+                            )
+                          : const Icon(Icons.image_not_supported),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                FloatingActionButton(
-                  mini: true,
-                  onPressed: _addTodo,
-                  backgroundColor: Colors.orangeAccent,
-                  child: const Icon(Icons.add, color: Colors.white),
-                ),
-              ],
-            ),
-          ),
-          
-          // Daftar Todo Reaktif
-          Expanded(
-            child: isar == null
-                ? const Center(child: CircularProgressIndicator())
-                : StreamBuilder<List<Todo>>(
-                    stream: isar!.todos.where().watch(fireImmediately: true),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) return const Center(child: Text("Error memuat data"));
-                      
-                      final todos = snapshot.data ?? [];
-
-                      if (todos.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.assignment_turned_in_outlined, size: 80, color: Colors.grey[400]),
-                              const SizedBox(height: 10),
-                              Text('Belum ada tugas hari ini', style: TextStyle(color: Colors.grey[500])),
-                            ],
-                          ),
-                        );
-                      }
-
-                      return ListView.builder(
-                        padding: const EdgeInsets.all(15),
-                        itemCount: todos.length,
-                        itemBuilder: (context, index) {
-                          final item = todos[index];
-                          return Card(
-                            elevation: 2,
-                            margin: const EdgeInsets.only(bottom: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                              leading: const CircleAvatar(
-                                backgroundColor: Colors.blueAccent,
-                                radius: 12,
-                              ),
-                              title: Text(
-                                item.title,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                              // PERBAIKAN: Penanganan Null Safety untuk menghindari error LateInitialization
-                              subtitle: Text(
-                                item.createdAt != null 
-                                  ? "Dibuat: ${item.createdAt!.hour.toString().padLeft(2, '0')}:${item.createdAt!.minute.toString().padLeft(2, '0')}"
-                                  : "Waktu tidak tersedia",
-                                style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                                onPressed: () => _deleteTodo(item.id),
+                  title: Text(
+                    item.title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      decoration: item.isCompleted ? TextDecoration.lineThrough : null,
+                    ),
+                  ),
+                  subtitle: Text(
+                    "Simpan: ${item.createdAt?.hour.toString().padLeft(2, '0')}:${item.createdAt?.minute.toString().padLeft(2, '0')}", // Logika NIM
+                    style: const TextStyle(fontSize: 12, color: Colors.blueAccent),
+                  ),
+                  trailing: Checkbox(
+                    activeColor: Colors.blueAccent,
+                    value: item.isCompleted,
+                    onChanged: (val) => isarService.toggleComplete(item.id, val!),
+                  ),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(15),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Menampilkan gambar lebih besar saat detail dibuka[cite: 5]
+                          if (item.imageUrl != null)
+                            Center(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(15),
+                                child: Image.network(item.imageUrl!, height: 150),
                               ),
                             ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-          ),
-        ],
+                          const SizedBox(height: 15),
+                          Text(
+                            "Deskripsi:",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue[900],
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            item.description ?? "Tidak ada deskripsi",
+                            style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                          ),
+                          const Divider(),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton.icon(
+                              onPressed: () => isarService.deleteTodo(item.id),
+                              icon: const Icon(Icons.delete_outline, color: Colors.red),
+                              label: const Text(
+                                "Hapus",
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
