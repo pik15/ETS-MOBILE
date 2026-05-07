@@ -165,7 +165,7 @@ class ProductPage extends StatelessWidget {
                     child: Image.network(
                       item.image,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.grey),
+                      errorBuilder: (_, _, _) => const Icon(Icons.broken_image, color: Colors.grey),
                     ),
                   ),
                 ),

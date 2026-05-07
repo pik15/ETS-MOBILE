@@ -80,7 +80,7 @@ class TodoPage extends StatelessWidget {
                           ? Image.network(
                               item.imageUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
+                              errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
                             )
                           : const Icon(Icons.image_not_supported),
                     ),
