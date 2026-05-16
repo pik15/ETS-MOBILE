@@ -37,6 +37,12 @@ class ProductPage extends StatelessWidget {
             icon: const Icon(Icons.bookmark_border_rounded),
             onPressed: () => context.push('/todo'),
           ),
+          // 👇 TOMBOL MODUL 9: Ditambahkan di AppBar aksi kanan
+          IconButton(
+            icon: const Icon(Icons.sync_rounded),
+            tooltip: 'Pengaturan Background',
+            onPressed: () => context.push('/sync'),
+          ),
         ],
       ),
       drawer: _buildDrawer(context),
@@ -205,7 +211,6 @@ class ProductPage extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          // DrawerHeader tetap menggunakan style Anda dengan sedikit perbaikan layout
           const DrawerHeader(
             decoration: BoxDecoration(
               gradient: LinearGradient(colors: [Colors.blueAccent, Color(0xFF1A73E8)]),
@@ -234,6 +239,11 @@ class ProductPage extends StatelessWidget {
           _drawerItem(Icons.bookmarks_rounded, 'Bookmark (Isar)', Colors.purple, () {
             Navigator.pop(context);
             context.push('/todo');
+          }),
+          // 👇 MENU MODUL 9: Ditambahkan ke dalam list Drawer paling bawah
+          _drawerItem(Icons.settings_backup_restore_rounded, 'Background Sync', Colors.blueGrey, () {
+            Navigator.pop(context);
+            context.push('/sync');
           }),
         ],
       ),

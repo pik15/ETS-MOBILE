@@ -11,7 +11,9 @@ import '../../../features/product/presentation/pages/detail_page.dart';
 import '../../../features/product/presentation/pages/crypto_page.dart';
 import '../../../features/product/presentation/pages/native_page.dart';
 import '../../../features/product/presentation/pages/todo_page.dart';
-import '../../../features/product/presentation/pages/splash_page.dart'; // Import Splash Baru
+import '../../../features/product/presentation/pages/splash_page.dart'; 
+// 👇 Import Baru Modul 9: Background Processing
+import '../../../features/sync/presentation/pages/background_sync_page.dart';
 
 // Import Cubit
 import '../../../features/product/presentation/cubit/product_cubit.dart';
@@ -33,7 +35,7 @@ class AppRouter {
         path: '/',
         builder: (context, state) {
           return BlocProvider(
-            // Inisialisasi Cubit melalui Service/Locator[cite: 6]
+            // Inisialisasi Cubit melalui Service/Locator
             create: (context) => locator<ProductCubit>()..fetchAllProducts(), 
             child: const ProductPage(),
           );
@@ -66,9 +68,15 @@ class AppRouter {
         path: '/todo', 
         builder: (context, state) => const TodoPage(),
       ),
+
+      // 👇 --- MODUL 9: BACKGROUND PROCESSING & SCHEDULERS ---
+      GoRoute(
+        path: '/sync', 
+        builder: (context, state) => const BackgroundSyncPage(),
+      ),
     ],
 
-    // Penanganan Error jika rute tidak ditemukan[cite: 6]
+    // Penanganan Error jika rute tidak ditemukan
     errorBuilder: (context, state) => Scaffold(
       appBar: AppBar(title: const Text('Error 404')),
       body: const Center(child: Text('Halaman tidak ditemukan!')),
