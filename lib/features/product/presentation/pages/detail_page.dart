@@ -171,7 +171,7 @@ class DetailPage extends StatelessWidget {
                   height: 250,
                   width: 250,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 100, color: Colors.grey),
+                  errorBuilder: (_, _, _) => const Icon(Icons.broken_image, size: 100, color: Colors.grey),
                 ),
               ),
             ),
