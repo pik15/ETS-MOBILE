@@ -1,13 +1,13 @@
-// KODE UTAMA (lib/features/auth/auth_service.dart)
+// KODE UTAMA KITA (lib/features/auth/auth_service.dart)
 
-// 1. Kontrak / Interface untuk ApiClient
+// Kita buat kontrak/interface sederhana untuk ApiClient
 abstract class ApiClient {
   Future<bool> loginKeServer(String email, String password);
 }
 
-// 2. Class utama yang mau kita uji (AuthService)
+// Ini adalah Class yang mau kita Test!
 class AuthService {
-  // AuthService butuh ApiClient untuk bekerja (Dependency Injection)
+  // AuthService butuh ApiClient untuk bekerja (Dependency)
   final ApiClient apiClient;
 
   AuthService(this.apiClient);
@@ -19,7 +19,7 @@ class AuthService {
     }
     
     try {
-      // Memanggil layanan API kontrak (Internet)
+      // Memanggil layanan API (Internet)
       final isSuccess = await apiClient.loginKeServer(email, password);
       if (isSuccess) {
         return "Login Berhasil!";
@@ -27,7 +27,6 @@ class AuthService {
         return "Kredensial Salah!";
       }
     } catch (e) {
-      // Mengatasi jika ada masalah jaringan/error server
       return "Terjadi Kesalahan Jaringan";
     }
   }
