@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../cubit/product_cubit.dart';
 import '../cubit/product_state.dart';
 
+// 👇 IMPORT BARU MODUL 11: Konfigurasi Environment
+import '../../../../core/config/env_config.dart'; // Jangan lupa sesuaikan path relative import ini
+
 class ProductPage extends StatelessWidget {
   const ProductPage({super.key});
 
@@ -12,18 +15,22 @@ class ProductPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA), // Grey yang lebih modern
       appBar: AppBar(
-        title: const Text(
-          'UTD Store Taupik',
-          style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1.2),
+        // 👇 1. MENAMPILKAN JUDUL DINAMIS + ENV_NAME [cite: 386, 387]
+        title: Text(
+          'UTD Store [${EnvConfig.environment}]',
+          style: const TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1.2),
         ),
         centerTitle: true,
         elevation: 0,
+        // 👇 2. MENGUBAH GRADRE WARNA DINAMIS SESUAI FLAVOR [cite: 388, 389]
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Colors.blueAccent, Color(0xFF1A73E8)],
+              colors: EnvConfig.isProduction
+                  ? [Colors.green.shade700, Colors.green.shade900] // Hijau Resmi jika Prod [cite: 389]
+                  : [Colors.blueGrey.shade700, Colors.blueGrey.shade900], // Biru Gelap jika Dev [cite: 389]
             ),
           ),
         ),
@@ -37,11 +44,16 @@ class ProductPage extends StatelessWidget {
             icon: const Icon(Icons.bookmark_border_rounded),
             onPressed: () => context.push('/todo'),
           ),
-          // 👇 TOMBOL MODUL 9: Ditambahkan di AppBar aksi kanan
           IconButton(
             icon: const Icon(Icons.sync_rounded),
             tooltip: 'Pengaturan Background',
             onPressed: () => context.push('/sync'),
+          ),
+          // 👇 TOMBOL BARU MODUL 10: Pintasan ke Halaman Animasi & Lottie 
+          IconButton(
+            icon: const Icon(Icons.animation_rounded),
+            tooltip: 'Advanced Animations',
+            onPressed: () => context.push('/animation'), // 
           ),
         ],
       ),
@@ -85,17 +97,20 @@ class ProductPage extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
+        // 👇 BANNER JATUH IKUT DINAMIS BIAR SERASI DENGAN APPBAR
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Colors.blueAccent, Color(0xFF1A73E8)],
+          colors: EnvConfig.isProduction
+              ? [Colors.green.shade600, Colors.green.shade800]
+              : [Colors.blueGrey.shade600, Colors.blueGrey.shade800],
         ),
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(30),
           bottomRight: Radius.circular(30),
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))
         ],
       ),
@@ -211,11 +226,15 @@ class ProductPage extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          const DrawerHeader(
+          DrawerHeader(
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.blueAccent, Color(0xFF1A73E8)]),
+              gradient: LinearGradient(
+                colors: EnvConfig.isProduction
+                    ? [Colors.green.shade700, Colors.green.shade900]
+                    : [Colors.blueAccent, Color(0xFF1A73E8)],
+              ),
             ),
-            child: Column(
+            child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -240,10 +259,14 @@ class ProductPage extends StatelessWidget {
             Navigator.pop(context);
             context.push('/todo');
           }),
-          // 👇 MENU MODUL 9: Ditambahkan ke dalam list Drawer paling bawah
           _drawerItem(Icons.settings_backup_restore_rounded, 'Background Sync', Colors.blueGrey, () {
             Navigator.pop(context);
             context.push('/sync');
+          }),
+          // 👇 MENU DRAWER BARU MODUL 10: Akses ke Halaman Animasi Lottie
+          _drawerItem(Icons.animation_rounded, 'Advanced Animations', Colors.teal, () {
+            Navigator.pop(context);
+            context.push('/animation');
           }),
         ],
       ),

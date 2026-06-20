@@ -6,6 +6,9 @@ import 'core/theme/app_theme.dart';
 import 'core/routing/app_router.dart';
 import 'core/di/injection.dart';
 
+// 👇 IMPORT BARU MODUL 11: Konfigurasi Environment
+import 'core/config/env_config.dart'; // 
+
 // 1. NAMA TUGAS (Konstanta agar tidak salah ketik)
 const String syncTask = "tugas_sinkronisasi_rutin";
 
@@ -63,10 +66,11 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
+      // 👇 SEKARANG PITA DEBUG INI BISA DIKONTROL DARI TERMINAL / CONFIG!
+      debugShowCheckedModeBanner: EnvConfig.showDebugBanner, // [cite: 300]
       title: 'android_studio', 
-      theme: AppTheme.lightTheme, // Menggunakan tema Teal UTD
-      routerConfig: AppRouter.router, // Menggunakan navigasi GoRouter
+      theme: AppTheme.lightTheme, // Menggunakan tema Teal UTD [cite: 302]
+      routerConfig: AppRouter.router, // Menggunakan navigasi GoRouter [cite: 303]
     );
   }
 }
