@@ -22,9 +22,7 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      # ==============================================================================
-      # PERBAIKAN SINTAKSIS: Membungkus nilai rahasia dengan kutip tunggal ('')
-      # ==============================================================================
+      # 2b. Mendecode Keystore tepat ke folder android/app/ (Sama seperti lokalmu!)
       - name: Decode Keystore File
         uses: timheuer/base64-to-file@v1.2
         with:
@@ -32,9 +30,13 @@ jobs:
           fileDir: './android/app/'
           encodedString: '${{ secrets.KEYSTORE_BASE64 }}'
 
-      # 2c. Menyusun Berkas Properti Kunci Digital langsung di folder android/
+      # 2c. Menyusun Key Properties langsung di folder android/ (Sama seperti lokalmu!)
       - name: Create Key Properties
-        run: echo "${{ secrets.KEY_PROPERTIES }}" > android/key.properties
+        run: |
+          echo "storePassword=android" > android/key.properties
+          echo "keyPassword=android" >> android/key.properties
+          echo "keyAlias=upload" >> android/key.properties
+          echo "storeFile=upload-keystore.jks" >> android/key.properties
 
       # 3. Menginstal Flutter SDK Stable
       - name: Setup Flutter
