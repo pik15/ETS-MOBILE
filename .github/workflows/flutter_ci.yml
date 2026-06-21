@@ -11,21 +11,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Mengunduh kode proyek ke server virtual (Ditingkatkan ke v4)
+      # 1. Mengunduh kode proyek ke server virtual
       - name: Download / Checkout Code
         uses: actions/checkout@v4
 
-      # 2. Setup Lingkungan Java JDK 17 (Ditingkatkan ke v4)
+      # 2. Setup Lingkungan Java JDK 17
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      # 2b. Menyusun kembali berkas kredensial dari GitHub Secrets
+      # 2b. Menyusun kembali file properti DAN file fisik keystore (.jks) dari GitHub Secrets
       - name: Decode Keystore & Create Key Properties
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+          echo "${{ secrets.KEYSTORE_BASE64 }}" > keystore_base64.txt
+          base64 --decode keystore_base64.txt > android/app/upload-keystore.jks
           echo "${{ secrets.KEY_PROPERTIES }}" > android/key.properties
 
       # 3. Menginstal Flutter SDK Stable
@@ -50,7 +51,7 @@ jobs:
       - name: Build APK Release
         run: flutter build apk --release
 
-      # 8. Mengunggah APK ke Halaman GitHub Artifacts (Ditingkatkan ke v4)
+      # 8. Mengunggah APK ke Halaman GitHub Artifacts
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
