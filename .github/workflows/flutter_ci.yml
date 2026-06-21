@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Mengunduh kode proyek ke server
+      # 1. Mengunduh kode proyek ke server virtual
       - name: Download / Checkout Code
         uses: actions/checkout@v3
 
@@ -22,7 +22,7 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      # [PERBAIKAN KOTLIN DSL] 2b. Menyuntikkan Kembali File Rahasia ke Server Virtual
+      # 2b. Merekonstruksi File Keystore dan Properti secara Aman dari GitHub Secrets
       - name: Decode Keystore & Create Key Properties
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
@@ -34,19 +34,19 @@ jobs:
         with:
           channel: 'stable'
 
-      # 4. Mengunduh package/dependencies (Dio, BLoC, Isar, dll)
+      # 4. Mengunduh dependencies sesuai pubspec.yaml
       - name: Install Dependencies
         run: flutter pub get
 
-      # 5. Membangun ulang file generated code Isar
+      # 5. Membangun ulang file otomatis kode generasi Isar (build_runner)
       - name: Run Build Runner
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
-      # 6. Menjalankan Uji Otomatis (Jika gagal, pipeline langsung stop)
+      # 6. Menjalankan Uji Otomatis (Unit/Widget Test)
       - name: Run Automated Tests
         run: flutter test
 
-      # 7. Membangun file APK versi Release
+      # 7. Membangun file APK versi Release resmi
       - name: Build APK Release
         run: flutter build apk --release
 
