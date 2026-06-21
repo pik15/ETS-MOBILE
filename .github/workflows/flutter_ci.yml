@@ -22,12 +22,19 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      # 2b. Menyusun kembali file properti DAN file fisik keystore (.jks) dari GitHub Secrets
-      - name: Decode Keystore & Create Key Properties
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" > keystore_base64.txt
-          base64 --decode keystore_base64.txt > android/app/upload-keystore.jks
-          echo "${{ secrets.KEY_PROPERTIES }}" > android/key.properties
+      # ==============================================================================
+      # PERBAIKAN STABILITAS: Mengubah Teks Base64 menjadi Berkas Fisik Keystore Asli
+      # ==============================================================================
+      - name: Decode Keystore File
+        uses: timheuer/base64-to-file@v1.2
+        with:
+          fileName: 'upload-keystore.jks'
+          fileDir: './android/app/'
+          encodedString: ${{ secrets.KEYSTORE_BASE64 }}
+
+      # 2c. Menyusun Berkas Properti Kunci Digital langsung di folder android/
+      - name: Create Key Properties
+        run: echo "${{ secrets.KEY_PROPERTIES }}" > android/key.properties
 
       # 3. Menginstal Flutter SDK Stable
       - name: Setup Flutter
