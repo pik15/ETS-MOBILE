@@ -11,7 +11,7 @@ class EnvConfig {
   // 2. Menangkap variabel 'BASE_URL' dari terminal
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',
-    defaultValue: 'https://fakestoreapi.com/dev_api', // Default fallback
+    defaultValue: 'https://fakestoreapi.com', // KOREKSI: Sudah diperbaiki ke URL resmi yang benar  
   );
 
   // 3. Menangkap variabel 'SHOW_DEBUG_BANNER' (True / False)

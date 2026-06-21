@@ -1,13 +1,23 @@
+import java.io.FileInputStream
+import java.util.Properties
+
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    FileInputStream(keystorePropertiesFile).use { keystoreProperties.load(it) }
+}
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
     namespace = "com.example.android_studio"
-    compileSdk = flutter.compileSdkVersion
+    
+    // Ditingkatkan ke 36 untuk memenuhi kebutuhan plugin 'integration_test' Anda
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -16,45 +26,43 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = "17"
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.android_studio"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        
+        // Ditingkatkan ke 36 agar sinkron dengan compileSdk
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties.getProperty("keyAlias")
+            keyPassword = keystoreProperties.getProperty("keyPassword")
+            storeFile = keystoreProperties.getProperty("storeFile")?.let { file(it) }
+            storePassword = keystoreProperties.getProperty("storePassword")
+        }
+    }
+
     buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+        getByName("debug") {
             signingConfig = signingConfigs.getByName("debug")
+        }
+        // PERBAIKAN: Menggunakan getByName untuk tipe release di Kotlin DSL
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+            
+            // Opsional: Biasanya disarankan menambahkan ini untuk optimasi rilis
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
 
 flutter {
     source = "../.."
-}
-
-// --- KODE SAKTI UNTUK FIX ISAR NAMESPACE ---
-// Letakkan ini di paling bawah agar semua sub-project (termasuk isar) 
-// mendapatkan namespace otomatis saat build.
-subprojects {
-    afterEvaluate {
-        val project = this
-        if (project.extensions.findByName("android") != null) {
-            configure<com.android.build.gradle.BaseExtension> {
-                if (namespace == null) {
-                    namespace = project.group.toString()
-                }
-            }
-        }
-    }
 }
