@@ -1,0 +1,58 @@
+name: UTD Advanced CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Mengunduh kode proyek ke server
+      - name: Download / Checkout Code
+        uses: actions/checkout@v3
+
+      # 2. Setup Lingkungan Java JDK 17
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      # [PERBAIKAN KOTLIN DSL] 2b. Menyuntikkan Kembali File Rahasia ke Server Virtual
+      - name: Decode Keystore & Create Key Properties
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+          echo "${{ secrets.KEY_PROPERTIES }}" > android/key.properties
+
+      # 3. Menginstal Flutter SDK Stable
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      # 4. Mengunduh package/dependencies (Dio, BLoC, Isar, dll)
+      - name: Install Dependencies
+        run: flutter pub get
+
+      # 5. Membangun ulang file generated code Isar
+      - name: Run Build Runner
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      # 6. Menjalankan Uji Otomatis (Jika gagal, pipeline langsung stop)
+      - name: Run Automated Tests
+        run: flutter test
+
+      # 7. Membangun file APK versi Release
+      - name: Build APK Release
+        run: flutter build apk --release
+
+      # 8. Mengunggah APK ke Halaman GitHub Artifacts
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: UTD-Advanced-Release-APK
+          path: build/app/outputs/flutter-apk/app-release.apk

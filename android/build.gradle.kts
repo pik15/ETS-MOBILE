@@ -14,6 +14,20 @@ subprojects {
     // 1. Mengatur direktori build bersama untuk setiap subproyek
     project.layout.buildDirectory.set(sharedBuildDir.resolve(project.name))
     
+    // ==============================================================================
+    // PERBAIKAN UTAMA KOTLIN DSL: Pemaksaan Resolusi Dependensi untuk Semua Subproyek
+    // ==============================================================================
+    project.configurations.configureEach {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "androidx.core" && requested.name == "core") {
+                useVersion("1.13.1")
+            }
+            if (requested.group == "androidx.core" && requested.name == "core-ktx") {
+                useVersion("1.13.1")
+            }
+        }
+    }
+
     // 2. Menyuntikkan namespace secara paksa sebelum konfigurasi Gradle dikunci
     afterEvaluate {
         if (project.name == "isar_flutter_libs") {
@@ -24,12 +38,22 @@ subprojects {
                 }
             }
         }
+        
+        // Memaksa subproyek menggunakan compileSdk 36 agar sinkron dengan properti Android modern
+        if (plugins.hasPlugin("com.android.application") || plugins.hasPlugin("com.android.library")) {
+            extensions.findByType<com.android.build.gradle.BaseExtension>()?.apply {
+                compileSdkVersion(36)
+                defaultConfig {
+                    targetSdkVersion(36)
+                }
+            }
+        }
     }
 }
 
-// PERBAIKAN: Evaluasi diatur secara spesifik pada root level, bukan di dalam semua subprojects
+// Evaluasi diatur secara spesifik pada root level
 gradle.projectsEvaluated {
-    tasks.findByName("examining") // Opsional, hanya memastikan siklus hidup aman
+    tasks.findByName("examining") 
 }
 
 tasks.register<Delete>("clean") {
